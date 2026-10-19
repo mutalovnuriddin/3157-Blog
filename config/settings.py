@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-bqpath^&+_l3h%*hs3)#j%hie=v+ivk5+we&x+c$i(f)$3-41c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['.onrender.com']
+ALLOWED_HOSTS = ['three157-blog.onrender.com']
 
 
 # Application definition
