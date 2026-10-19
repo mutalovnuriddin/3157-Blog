@@ -5,3 +5,4 @@ channels[daphne]>=4.3,<5
 channels-redis>=4.3,<5
 daphne==4.2.3
 uvicorn==0.54.0
+requests==2.34.2
