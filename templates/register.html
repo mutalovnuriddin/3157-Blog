@@ -1,0 +1,50 @@
+{% load static social_safe %}
+
+
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f3f1e9">
+    <title>Ro'yxatdan o'tish | 3157 Blog</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <main class="auth-layout register-layout">
+        <section class="auth-intro" aria-label="Profil yaratish">
+            <a class="wordmark" href="{% url 'home' %}"><span class="wordmark-mark">3</span> 3157 Blog</a>
+            <div class="intro-copy">
+                <p class="eyebrow">Yangi sahifa</p>
+                <h1>O'zingizni<br>tanishtiring.</h1>
+                <p class="intro-note">Profilingizni yarating, muhim ma'lumot va suratingizni qo'shing.</p>
+            </div>
+            <div class="intro-index"><span>02</span><span>SHAXSIY PROFIL</span></div>
+        </section>
+        <section class="auth-panel register-panel">
+            <div class="auth-content">
+                <p class="eyebrow accent">Yangi hisob</p>
+                <h2>Ro'yxatdan o'tish</h2>
+                <p class="form-lead">Quyidagi maydonlarni to'ldiring.</p>
+                <form class="auth-form" action="{% url 'register' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    {% for field in form %}
+                        <div class="form-field">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.help_text %}<div class="help-text">{{ field.help_text|safe }}</div>{% endif %}
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+                    <button class="button button-primary" type="submit">Hisob yaratish <span aria-hidden="true">→</span></button>
+                </form>
+                <a class="button button-google" href="{% provider_login_url_safe 'google' %}">Google bilan Kirish <span aria-hidden="true">→</span></a>
+                <p class="auth-switch">Hisobingiz bormi? <a href="{% url 'login' %}">Kirish</a></p>
+            </div>
+            <footer class="panel-footer"><span>Bir necha daqiqada</span><span>profilingiz tayyor.</span></footer>
+        </section>
+    </main>
+</body>
+</html>

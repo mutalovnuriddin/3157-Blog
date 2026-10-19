@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f3f1e9">
+    <title>{% if peer %}{{ peer.username }} bilan chat{% else %}Xabarlar{% endif %} | 3157 Blog</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="feed-body chat-body">
+    <main class="chat-shell{% if active_conversation %} has-active-conversation{% endif %}"
+        data-chat
+        data-socket-path="{{ chat_socket_path }}"
+        data-audio-upload-url="{% if active_conversation %}{% url 'chat_audio_upload' active_conversation.pk %}{% endif %}"
+        data-current-user="{{ request.user.pk }}"
+        data-active-conversation="{% if active_conversation %}{{ active_conversation.pk }}{% endif %}"
+        data-peer-id="{% if peer %}{{ peer.pk }}{% endif %}">
+        <aside class="chat-sidebar">
+            <header class="chat-sidebar-header">
+                <a class="wordmark" href="{% url 'home' %}">
+                    <span class="wordmark-mark">3</span> 3157 Blog
+                </a>
+                <div class="chat-sidebar-tools">
+                    <a class="chat-notifications-link" href="{% url 'notifications' %}" aria-label="Bildirishnomalar" title="Bildirishnomalar">
+                        <span aria-hidden="true">🔔</span>{% if unread_notifications_count %}<span class="nav-count">{{ unread_notifications_count }}</span>{% endif %}
+                    </a>
+                    <a class="chat-compose-link" href="{% url 'search_users' %}" aria-label="Foydalanuvchi topish" title="Yangi chat">+</a>
+                </div>
+            </header>
+            <div class="chat-inbox-heading">
+                <div>
+                    <p class="eyebrow accent">Hamjamiyat</p>
+                    <h1>Xabarlar</h1>
+                </div>
+                <span class="chat-inbox-count">{{ chat_items|length }}</span>
+            </div>
+            <label class="chat-filter">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                    <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <span class="visually-hidden">Suhbatlarni qidirish</span>
+                <input type="search" placeholder="Suhbatlarni qidirish" data-chat-filter>
+            </label>
+            <nav class="chat-conversation-list" aria-label="Suhbatlar">
+                {% for item in chat_items %}
+                    <a class="chat-conversation{% if item.is_active %} is-active{% endif %}{% if item.unread_count %} has-unread{% endif %}"
+                        href="{{ item.conversation_url }}"
+                        data-conversation-id="{{ item.conversation.pk }}"
+                        data-peer-name="{{ item.peer.username|lower }}">
+                        <span class="chat-avatar">
+                            {% if item.peer_avatar_url %}
+                                <img src="{{ item.peer_avatar_url }}" alt="">
+                            {% else %}
+                                {{ item.peer.username|first|upper }}
+                            {% endif %}
+                            <span class="chat-online-dot{% if item.is_online %} is-online{% endif %}" data-peer-presence="{{ item.peer.pk }}"></span>
+                        </span>
+                        <span class="chat-conversation-copy">
+                            <strong>{{ item.peer.username }}</strong>
+                            <span data-conversation-preview>
+                                {% if item.last_message %}
+                                    {% if item.last_message.sender_id == request.user.pk %}Siz: {% endif %}{% if item.last_message.shared_post_id %}Post ulashildi{% elif item.last_message.audio %}Ovozli xabar{% elif item.last_message.attachment %}Rasm yoki video{% else %}{{ item.last_message.text|truncatechars:42 }}{% endif %}
+                                {% else %}
+                                    Suhbatni boshlang
+                                {% endif %}
+                            </span>
+                        </span>
+                        <span class="chat-unread-badge" data-unread-badge{% if not item.unread_count %} hidden{% endif %}>{{ item.unread_count }}</span>
+                        <time class="chat-conversation-time">
+                            {% if item.last_message %}{{ item.last_message.created_at|date:"H:i" }}{% endif %}
+                        </time>
+                    </a>
+                {% empty %}
+                    <div class="chat-sidebar-empty">
+                        <span aria-hidden="true">✳</span>
+                        <p>Hozircha suhbat yo‘q.</p>
+                        <a href="{% url 'search_users' %}">Foydalanuvchi topish</a>
+                    </div>
+                {% endfor %}
+            </nav>
+            <a class="chat-my-profile" href="{% url 'profile' %}">
+                <span class="chat-avatar chat-own-avatar">
+                    {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" alt="">
+                    {% else %}
+                        {{ request.user.username|first|upper }}
+                    {% endif %}
+                </span>
+                <span>@{{ request.user.username }}</span>
+                <span aria-hidden="true">↗</span>
+            </a>
+        </aside>
+
+        <section class="chat-main" aria-label="Chat oynasi">
+            {% if peer %}
+                <header class="chat-header">
+                    <a class="chat-mobile-back" href="{% url 'chat_inbox' %}" aria-label="Suhbatlar ro‘yxatiga qaytish">←</a>
+                    <a class="chat-avatar chat-header-avatar" href="{% url 'public_profile' peer.pk %}">
+                        {% if peer_avatar_url %}
+                            <img src="{{ peer_avatar_url }}" alt="">
+                        {% else %}
+                            {{ peer.username|first|upper }}
+                        {% endif %}
+                        <span class="chat-online-dot{% if is_peer_online %} is-online{% endif %}" data-active-peer-presence></span>
+                    </a>
+                    <div class="chat-header-user">
+                        <a href="{% url 'public_profile' peer.pk %}">{{ peer.username }}</a>
+                        <span data-chat-presence-text>{% if is_peer_online %}online{% else %}offline{% endif %}</span>
+                    </div>
+                    <a class="chat-header-profile" href="{% url 'public_profile' peer.pk %}" aria-label="Profilni ko‘rish" title="Profilni ko‘rish">i</a>
+                </header>
+
+                <div class="chat-messages" data-chat-messages aria-live="polite">
+                    {% for message in messages %}
+                        <article class="chat-message{% if message.sender_id == request.user.pk %} is-mine{% endif %}" data-message-id="{{ message.pk }}">
+                            {% if message.sender_id != request.user.pk %}
+                                <span class="chat-message-avatar">
+                                    {% if peer_avatar_url %}
+                                        <img src="{{ peer_avatar_url }}" alt="">
+                                    {% else %}
+                                        {{ peer.username|first|upper }}
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                            <div class="chat-message-content">
+                                {% if message.shared_post_id %}
+                                    {% include "partials/shared_post_card.html" with shared_post=message.shared_post_data %}
+                                {% elif message.audio %}
+                                    <audio class="chat-voice-message" controls preload="metadata" src="{{ message.media_url }}"></audio>
+                                {% elif message.attachment %}
+                                    {% if message.media_type|slice:"0:6" == "video/" %}
+                                        <video class="chat-attachment-video" controls preload="metadata" src="{{ message.media_url }}"></video>
+                                    {% else %}
+                                        <a class="chat-attachment-link" href="{{ message.media_url }}" target="_blank" rel="noopener">
+                                            <img class="chat-attachment-image" src="{{ message.media_url }}" alt="Yuborilgan rasm" loading="lazy">
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <p>{{ message.text }}</p>
+                                {% endif %}
+                                <div class="chat-message-meta">
+                                    <time datetime="{{ message.created_at|date:'c' }}">{{ message.created_at|date:"H:i" }}</time>
+                                    <span data-message-edited hidden>Tahrirlangan</span>
+                                </div>
+                                {% if message.sender_id == request.user.pk %}
+                                    <div class="chat-message-actions">
+                                        {% if not message.audio and not message.attachment and not message.shared_post_id %}<button type="button" data-message-action="edit">Tahrirlash</button>{% endif %}
+                                        <button type="button" data-message-action="delete">O‘chirish</button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% empty %}
+                        <div class="chat-start-state" data-chat-start-state>
+                            <span class="chat-start-avatar">
+                                {% if peer_avatar_url %}
+                                    <img src="{{ peer_avatar_url }}" alt="">
+                                {% else %}
+                                    {{ peer.username|first|upper }}
+                                {% endif %}
+                            </span>
+                            <h2>{{ peer.username }}</h2>
+                            <p>Suhbatni boshlash uchun birinchi xabaringizni yuboring.</p>
+                            <a href="{% url 'public_profile' peer.pk %}">Profilni ko‘rish</a>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="chat-typing" data-chat-typing hidden>
+                    <span class="typing-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    <span>{{ peer.username }} yozmoqda</span>
+                </div>
+
+                <div class="chat-media-preview" data-media-preview hidden>
+                    <div class="chat-media-preview-content" data-media-preview-content></div>
+                    <div class="chat-media-preview-actions">
+                        <button type="button" data-media-cancel>Bekor qilish</button>
+                        <button type="button" data-media-send disabled>Yuborish</button>
+                    </div>
+                </div>
+                <form class="chat-composer" data-chat-form>
+                    {% csrf_token %}
+                    <button class="chat-utility-button" type="button" aria-label="Emoji tanlash" title="Emoji" data-emoji-toggle>☺</button>
+                    <button class="chat-utility-button" type="button" aria-label="Rasm yoki video tanlash" title="Rasm yoki video" data-media-pick>
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="8.5" cy="9" r="1.5" stroke="currentColor" stroke-width="1.6"/>
+                            <path d="m4 17 5-5 3 3 3-4 5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime,video/ogg" data-media-input hidden>
+                    <label class="visually-hidden" for="chatMessageInput">Xabar matni</label>
+                    <textarea id="chatMessageInput" rows="1" maxlength="4000" placeholder="Xabar yozing..." data-chat-input disabled></textarea>
+                    <button class="chat-record-button" type="button" aria-label="Ovozli xabar yozish" title="Ovozli xabar yozish" disabled data-chat-record>
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                            <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3m-4 0h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <button class="chat-send-button" type="submit" aria-label="Xabarni yuborish" disabled data-chat-send>
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                            <path d="m21 3-7.2 18-3.8-7-7-3.8L21 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                            <path d="M10 14 21 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </form>
+                <div class="chat-emoji-picker" data-emoji-picker hidden aria-label="Emoji tanlang"></div>
+                <p class="chat-recording-status" data-chat-recording-status hidden></p>
+                <p class="chat-error" data-chat-error role="alert" hidden></p>
+            {% else %}
+                <div class="chat-empty-main">
+                    <span class="chat-empty-icon" aria-hidden="true">✉</span>
+                    <h2>Xabarlaringiz shu yerda</h2>
+                    <p>Chap tomondan suhbatni tanlang yoki yangi odam topib, yozishni boshlang.</p>
+                    <a class="button button-primary" href="{% url 'search_users' %}">Yangi suhbat <span aria-hidden="true">→</span></a>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+    <script src="{% static 'js/chat.js' %}" defer></script>
+</body>
+</html>

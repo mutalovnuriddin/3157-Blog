@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f3f1e9">
+    <title>Bildirishnomalar | 3157 Blog</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="feed-body">
+    <main class="feed-page notifications-page">
+        <header class="feed-header notifications-header">
+            <a class="wordmark" href="{% url 'home' %}"><span class="wordmark-mark">3</span> 3157 Blog</a>
+            <button class="nav-burger" type="button" data-nav-burger aria-label="Menyuni ochish" aria-expanded="false" aria-controls="feedNavNotif" title="Menyu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+            <nav id="feedNavNotif" class="feed-nav" aria-label="Asosiy navigatsiya" data-nav-burger-menu>
+                <a href="{% url 'home' %}">Postlar</a>
+                <a href="{% url 'chat_inbox' %}">Xabarlar</a>
+                <a class="feed-nav-active" href="{% url 'notifications' %}">Bildirishnomalar{% if unread_notifications_count %}<span class="nav-count">{{ unread_notifications_count }}</span>{% endif %}</a>
+                <a href="{% url 'profile' %}">Mening profilim <span aria-hidden="true">→</span></a>
+            </nav>
+        </header>
+        <section class="notifications-main" aria-labelledby="notifications-title">
+            <div class="notifications-heading">
+                <div>
+                    <p class="eyebrow accent">Siz uchun</p>
+                    <h1 id="notifications-title">Bildirishnomalar</h1>
+                    <p>Postlaringizga kelgan like, izoh va yangi kuzatuvchilar shu yerda.</p>
+                </div>
+                <form action="{% url 'mark_notifications_read' %}" method="post">
+                    {% csrf_token %}
+                    <button class="button notifications-read-button" type="submit">Barchasini o‘qilgan deb belgilash</button>
+                </form>
+            </div>
+            <div class="notification-list">
+                {% for item in notifications %}
+                    <article class="notification-card{% if not item.is_read %} is-unread{% endif %}">
+                        <div class="notification-person">
+                            <a class="notification-avatar" href="{% url 'public_profile' item.sender.pk %}">
+                                {% if item.sender_avatar_url %}
+                                    <img src="{{ item.sender_avatar_url }}" alt="">
+                                {% else %}
+                                    <span>{{ item.sender.username|slice:":1"|upper }}</span>
+                                {% endif %}
+                            </a>
+                            <div class="notification-copy">
+                                <p>
+                                    <a href="{% url 'public_profile' item.sender.pk %}">@{{ item.sender.username }}</a>
+                                    {% if item.notification_type == 'like' %}
+                                        postingizga like bosdi <span aria-hidden="true">♥</span>
+                                    {% elif item.notification_type == 'comment' %}
+                                        postingizga izoh qoldirdi
+                                    {% elif item.notification_type == 'follow' %}
+                                        sizni kuzatishni boshladi
+                                    {% endif %}
+                                </p>
+                                {% if item.notification_type == 'comment' and item.comment %}
+                                    <blockquote>“{{ item.comment.text|truncatechars:100 }}”</blockquote>
+                                {% endif %}
+                                <time datetime="{{ item.created_at|date:'c' }}">{{ item.created_at|date:"d.m.Y · H:i" }}</time>
+                            </div>
+                        </div>
+                        {% if item.post %}
+                            <a class="notification-post-link" href="{% if item.post.author_id == request.user.pk %}{% url 'profile' %}{% else %}{% url 'public_profile' item.post.author_id %}{% endif %}#post-{{ item.post.pk }}">
+                                Postni ko‘rish <span aria-hidden="true">→</span>
+                                {% if item.post.title %}
+                                    <small>{{ item.post.title|truncatechars:35 }}</small>
+                                {% else %}
+                                    <small>{{ item.post.desc|truncatechars:35 }}</small>
+                                {% endif %}
+                            </a>
+                        {% endif %}
+                    </article>
+                {% empty %}
+                    <div class="notifications-empty">
+                        <span aria-hidden="true">✳</span>
+                        <h2>Hozircha bildirishnoma yo‘q</h2>
+                        <p>Yangi like, izoh yoki kuzatuvchi bo‘lsa, shu yerda ko‘rasiz.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+        <footer class="feed-bottom"><span>3157 BLOG</span><span>Yangiliklardan xabardor bo‘ling.</span></footer>
+    </main>
+</body>
+</html>

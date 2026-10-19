@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f3f1e9">
+    <title>Profilni tahrirlash | 3157 Blog</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <main class="profile-page edit-page">
+        <header class="profile-header">
+            <a class="wordmark" href="{% url 'profile' %}">
+                <span class="wordmark-mark">3</span> 3157 Blog
+            </a>
+            <a class="edit-back-link" href="{% url 'profile' %}">
+                <span aria-hidden="true">←</span> Profilga qaytish
+            </a>
+        </header>
+
+        <section class="edit-main">
+            <div class="edit-heading">
+                <p class="eyebrow accent">Hisob sozlamalari</p>
+                <h1>Profilingizni<br><span>yangilang.</span></h1>
+                <p>Ma’lumotlaringiz va hisob xavfsizligini shu yerdan boshqaring.</p>
+            </div>
+
+            <form class="edit-grid" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <section class="edit-card details-card" aria-labelledby="details-title">
+                    <div class="edit-card-heading">
+                        <div class="edit-card-icon" aria-hidden="true">01</div>
+                        <div>
+                            <p class="edit-card-kicker">Siz haqingizda</p>
+                            <h2 id="details-title">Shaxsiy ma’lumotlar</h2>
+                        </div>
+                    </div>
+                    {{ profile_form.non_field_errors }}
+                    <div class="edit-fields">
+                        {% for field in profile_form %}
+                            {% if field.name != 'avatar' %}
+                                <div class="edit-field{% if field.name == 'bio' %} edit-field-wide{% endif %}">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <aside class="edit-card avatar-card" aria-labelledby="avatar-title">
+                    <div class="edit-card-heading">
+                        <div class="edit-card-icon" aria-hidden="true">02</div>
+                        <div>
+                            <p class="edit-card-kicker">Ko‘rinishingiz</p>
+                            <h2 id="avatar-title">Profil rasmi</h2>
+                        </div>
+                    </div>
+                    <div class="edit-avatar-preview">
+                        {% if edit_avatar_url %}
+                            <img src="{{ edit_avatar_url }}" alt="{{ request.user.username }} profil surati">
+                        {% else %}
+                            <span>{{ request.user.username|first|upper }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="avatar-caption">Yangi surat tanlang yoki hozirgi rasmingizni qoldiring.</p>
+                    <div class="edit-field avatar-upload">
+                        {{ profile_form.avatar.label_tag }}
+                        {{ profile_form.avatar }}
+                        {{ profile_form.avatar.errors }}
+                    </div>
+                    <button class="button button-primary edit-submit" type="submit" name="submit_profile">
+                        O‘zgarishlarni saqlash <span aria-hidden="true">→</span>
+                    </button>
+                </aside>
+            </form>
+
+            <section class="edit-card password-card" aria-labelledby="password-title">
+                <div class="edit-card-heading">
+                    <div class="edit-card-icon password-icon" aria-hidden="true">03</div>
+                    <div>
+                        <p class="edit-card-kicker">Hisob xavfsizligi</p>
+                        <h2 id="password-title">Parolni o‘zgartirish</h2>
+                    </div>
+                </div>
+                <p class="password-intro">Hisobingizni himoyalash uchun yangi, ishonchli parol tanlang.</p>
+                <form method="post" class="password-form">
+                    {% csrf_token %}
+                    {{ password_form.non_field_errors }}
+                    <div class="edit-fields password-fields">
+                        {% for field in password_form %}
+                            <div class="edit-field">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}
+                                {{ field.errors }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button class="button button-secondary edit-submit" type="submit" name="submit_password">
+                        Parolni yangilash <span aria-hidden="true">→</span>
+                    </button>
+                </form>
+            </section>
+        </section>
+
+        <footer class="profile-footer">
+            <span>3157 BLOG</span>
+            <span>{{ request.user.username }}</span>
+        </footer>
+    </main>
+</body>
+</html>

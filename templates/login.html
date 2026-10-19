@@ -1,0 +1,49 @@
+{% load static social_safe %}
+
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f3f1e9">
+    <meta name="description" content="3157 Blog hamjamiyati — post ulashish, chat va bildirishnomalar.">
+    <title>Kirish | 3157 Blog</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <main class="auth-layout">
+        <section class="auth-intro" aria-label="Profil xizmatiga kirish">
+            <a class="wordmark" href="{% url 'home' %}"><span class="wordmark-mark">3</span> 3157 Blog</a>
+            <div class="intro-copy">
+                <p class="eyebrow">O'zingizga tegishli joy</p>
+                <h1>Yana<br>ko'rishdik.</h1>
+                <p class="intro-note">Profilingizga kiring va o'zingiz haqingizdagi ma'lumotlarni bir joyda saqlang.</p>
+            </div>
+            <div class="intro-index"><span>01</span><span>SHAXSIY PROFIL</span></div>
+        </section>
+        <section class="auth-panel">
+            <div class="auth-content">
+                <p class="eyebrow accent">Xush kelibsiz</p>
+                <h2>Hisobingizga kiring</h2>
+                <p class="form-lead">Davom etish uchun ma'lumotlaringizni kiriting.</p>
+                <form class="auth-form" action="{% url 'login' %}" method="post">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    {% for field in form %}
+                        <div class="form-field">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+                    <button class="button button-primary" type="submit">Kirish <span aria-hidden="true">→</span></button>
+                </form>
+                <a class="button button-google" href="{% provider_login_url_safe 'google' %}">Google bilan Kirish <span aria-hidden="true">→</span></a>
+                <p class="auth-switch">Hali hisobingiz yo'qmi? <a href="{% url 'register' %}">Ro'yxatdan o'ting</a></p>
+            </div>
+            <footer class="panel-footer"><span>Shaxsiy ma'lumotlaringiz</span><span>faqat siz uchun.</span></footer>
+        </section>
+    </main>
+</body>
+</html>

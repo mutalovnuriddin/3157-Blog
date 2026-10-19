@@ -1,0 +1,68 @@
+<section class="post-social" aria-label="Postdagi faollik" data-post-social>
+    <div class="post-social-actions">
+        <form action="{% url 'like_post' post.pk %}" method="post" data-ajax-action="like">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="social-button{% if post.is_liked %} is-liked{% endif %}" type="submit" aria-pressed="{{ post.is_liked|yesno:'true,false' }}" data-like-button>
+                <span class="social-heart" aria-hidden="true">{% if post.is_liked %}♥{% else %}♡{% endif %}</span>
+                <span class="social-action-label">{% if post.is_liked %}Yoqdi{% else %}Yoqtirish{% endif %}</span>
+                <span class="social-count" data-like-count>{{ post.likes_count }}</span>
+            </button>
+            <span class="ajax-error" data-ajax-error role="alert" hidden></span>
+        </form>
+        <button class="social-button comment-toggle" type="button" data-comment-toggle aria-expanded="false" aria-controls="post-comments-{{ post.pk }}">
+            <svg class="comment-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                <path d="M20.2 11.7a8.2 8.2 0 0 1-8.4 8.1 9 9 0 0 1-3.5-.7l-4.5 1.2 1.2-4.2a7.7 7.7 0 0 1-1.6-4.4 8.2 8.2 0 0 1 8.4-8.1 8.2 8.2 0 0 1 8.4 8.1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+            <span class="social-action-label">Izoh yozish</span>
+            <span class="social-count" data-comment-count>{{ post.comments.all|length }}</span>
+        </button>
+        <button class="social-button" type="button" data-share-post="{{ post.pk }}" aria-label="Postni xabarda ulashish">
+            <svg class="share-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                <path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="social-action-label">Ulashish</span>
+        </button>
+    </div>
+
+    <div class="post-comments" id="post-comments-{{ post.pk }}" data-comments-list hidden>
+        {% for comment in post.comments.all %}
+            <article class="post-comment">
+                <a class="comment-avatar" href="{% url 'public_profile' comment.author_id %}" aria-label="{{ comment.author.username }} profiliga o‘tish">
+                    {% if comment.author_avatar_url %}
+                        <img src="{{ comment.author_avatar_url }}" alt="">
+                    {% else %}
+                        <span>{{ comment.author.username|first|upper }}</span>
+                    {% endif %}
+                </a>
+                <div class="comment-content">
+                    <div class="comment-meta">
+                        <a href="{% url 'public_profile' comment.author_id %}">{{ comment.author.username }}</a>
+                        <time datetime="{{ comment.created_at|date:'c' }}">{{ comment.created_at|date:"d.m.Y · H:i" }}</time>
+                    </div>
+                    <p>{{ comment.text }}</p>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+
+    <form class="comment-form" action="{% url 'add_comment' post.pk %}" method="post" data-ajax-action="comment" hidden>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <span class="comment-avatar comment-form-avatar" aria-hidden="true">
+            {% if comment_form_avatar_url %}
+                <img src="{{ comment_form_avatar_url }}" alt="">
+            {% else %}
+                <span>{{ request.user.username|first|upper }}</span>
+            {% endif %}
+        </span>
+        <div class="comment-compose">
+            {{ comment_form.text }}
+            <div class="comment-compose-footer">
+                <span>Hurmat bilan fikr bildiring</span>
+                <button class="button button-primary" type="submit">Yuborish <span aria-hidden="true">→</span></button>
+            </div>
+            <span class="ajax-error comment-ajax-error" data-ajax-error role="alert" hidden></span>
+        </div>
+    </form>
+</section>

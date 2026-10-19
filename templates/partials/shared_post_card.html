@@ -1,0 +1,30 @@
+<article class="shared-post-card">
+    <header class="shared-post-author">
+        <a href="{{ shared_post.author_url }}">@{{ shared_post.author_username }}</a>
+        <time>{{ shared_post.created_at }}</time>
+    </header>
+    {% if shared_post.image_url %}
+        <img class="shared-post-media" src="{{ shared_post.image_url }}" alt="Ulashilgan post rasmi" loading="lazy">
+    {% elif shared_post.video_url %}
+        <video class="shared-post-media" controls preload="metadata">
+            <source src="{{ shared_post.video_url }}">
+            Brauzeringiz videoni qo‘llab-quvvatlamaydi.
+        </video>
+    {% endif %}
+    <div class="shared-post-copy">
+        {% if shared_post.title %}<h3>{{ shared_post.title }}</h3>{% endif %}
+        <p>{{ shared_post.description }}</p>
+    </div>
+    <div class="shared-post-stats">
+        <span>♥ {{ shared_post.likes_count }}</span>
+        <span>Izohlar {{ shared_post.comments_count }}</span>
+    </div>
+    {% if shared_post.comments %}
+        <div class="shared-post-comments">
+            {% for comment in shared_post.comments %}
+                <p><a href="{{ comment.author_url }}">@{{ comment.username }}</a> {{ comment.text }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <a class="shared-post-open" href="{{ shared_post.post_url }}">Postni ko‘rish <span aria-hidden="true">↗</span></a>
+</article>

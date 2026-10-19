@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f3f1e9">
+    <title>{{ profile_user.username }} | 3157 Blog</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <main class="profile-page">
+        <header class="profile-header">
+            <a class="wordmark" href="{% url 'home' %}"><span class="wordmark-mark">3</span> 3157 Blog</a>
+            <a href="{% url 'notifications' %}" class="profile-notification-link">
+                <span aria-hidden="true">🔔</span> Bildirishnomalar
+                {% if unread_notifications_count > 0 %}
+                    <span class="nav-count">
+                        {{ unread_notifications_count }}
+                    </span>
+                {% endif %}
+            </a>
+            <button class="nav-burger" type="button" data-nav-burger aria-label="Menyuni ochish" aria-expanded="false" aria-controls="profileNav" title="Menyu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+            <nav id="profileNav" class="profile-nav" aria-label="Profil navigatsiyasi" data-nav-burger-menu>
+                <a href="{% url 'home' %}">Postlar</a>
+                {% if is_profile_owner %}
+                    <a href="{% url 'post_create' %}">Post qo‘shish</a>
+                    <a href="{% url 'profile_edit' %}">Tahrirlash</a>
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button class="button button-quiet" type="submit">Chiqish <span aria-hidden="true">↗</span></button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'profile' %}">Mening profilim</a>
+                {% endif %}
+                <a href="{% url 'chat_inbox' %}">Xabarlar</a>
+            </nav>
+        </header>
+        <section class="profile-main">
+            {% if messages %}
+                <div class="feed-messages" role="status">
+                    {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+                </div>
+            {% endif %}
+            <section class="profile-hero" aria-label="Profil ma’lumotlari">
+                <div class="profile-hero-avatar avatar-frame">
+                    {% if local_avatar_url %}
+                        <img src="{{ local_avatar_url }}" alt="{{ profile_user.username }} profil surati">
+                    {% elif google_avatar_url %}
+                        <img src="{{ google_avatar_url }}" alt="{{ profile_user.username }} profil surati">
+                    {% elif profile_user.avatar %}
+                        <img src="{{ profile_user.avatar.url }}" alt="{{ profile_user.username }} profil surati">
+                    {% else %}
+                        <span>{{ profile_user.username|first|upper }}</span>
+                    {% endif %}
+                </div>
+                <div class="profile-hero-info">
+                    <div class="profile-title-row">
+                        <h1>{{ profile_user.username }}</h1>
+                        {% if is_profile_owner %}
+                            <a class="button profile-edit-button" href="{% url 'profile_edit' %}">Profilni tahrirlash</a>
+                        {% else %}
+                            <form action="{% url 'follow_toggle' profile_user.pk %}" method="post" data-ajax-action="follow">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button class="button {% if is_following %}button-quiet{% else %}button-primary{% endif %}" type="submit" data-follow-button>
+                                    {% if is_following %}Kuzatilyapti{% else %}Kuzatish{% endif %}
+                                </button>
+                                <span class="ajax-error" data-ajax-error role="alert" hidden></span>
+                            </form>
+                            <a class="button profile-chat-button" href="{% url 'start_chat' profile_user.pk %}">
+                                Chat <span aria-hidden="true">↗</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="profile-stats" aria-label="Profil statistikasi">
+                        <span><strong>{{ user_posts|length }}</strong> post</span>
+                        <button class="profile-stat-button" type="button" data-open-follow-modal="followers" aria-haspopup="dialog">
+                            <strong data-followers-count>{{ followers_count }}</strong> kuzatuvchi
+                        </button>
+                        <button class="profile-stat-button" type="button" data-open-follow-modal="following" aria-haspopup="dialog">
+                            <strong>{{ following_count }}</strong> kuzatilmoqda
+                        </button>
+                    </div>
+                    <div class="profile-bio">
+                        <span class="profile-bio-label">Profil haqida</span>
+                        <p>{{ profile_user.bio|default:'Hozircha ma’lumot qo‘shilmagan.' }}</p>
+                        {% if is_profile_owner and profile_user.phone_number %}
+                            <span class="profile-contact">Telefon: {{ profile_user.phone_number }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="connections-modal" data-connections-modal role="dialog" aria-modal="true" aria-labelledby="connections-modal-title" hidden>
+                <button class="connections-backdrop" type="button" data-close-follow-modal aria-label="Oynani yopish"></button>
+                <div class="connections-dialog">
+                    <header class="connections-header">
+                        <h2 id="connections-modal-title">Hamjamiyat</h2>
+                        <button class="connections-close" type="button" data-close-follow-modal aria-label="Yopish">×</button>
+                    </header>
+                    <div class="connections-tabs" role="tablist" aria-label="Profil aloqalari">
+                        <button class="connections-tab is-active" id="followers-tab" type="button" role="tab" aria-selected="true" aria-controls="followers-panel" data-follow-tab="followers">
+                            Kuzatuvchilar <span data-followers-tab-count>{{ followers_count }}</span>
+                        </button>
+                        <button class="connections-tab" id="following-tab" type="button" role="tab" aria-selected="false" aria-controls="following-panel" data-follow-tab="following" tabindex="-1">
+                            Kuzatilmoqda <span>{{ following_count }}</span>
+                        </button>
+                    </div>
+                    <div class="connections-list" id="followers-panel" role="tabpanel" aria-labelledby="followers-tab" data-follow-panel="followers">
+                        {% for connection in followers %}
+                            <a class="connection-user" href="{{ connection.profile_url }}">
+                                <span class="search-user-avatar">
+                                    {% if connection.display_avatar %}
+                                        <img src="{{ connection.display_avatar }}" alt="">
+                                    {% else %}
+                                        {{ connection.username|first|upper }}
+                                    {% endif %}
+                                </span>
+                                <span class="search-user-copy">
+                                    <strong>@{{ connection.username }}</strong>
+                                    {% if connection.get_full_name %}<span>{{ connection.get_full_name }}</span>{% else %}<span>Profilni ko‘rish</span>{% endif %}
+                                </span>
+                                <span class="connection-arrow" aria-hidden="true">→</span>
+                            </a>
+                        {% empty %}
+                            <p class="connections-empty">Hozircha kuzatuvchilar yo‘q.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="connections-list" id="following-panel" role="tabpanel" aria-labelledby="following-tab" data-follow-panel="following" hidden>
+                        {% for connection in following_users %}
+                            <a class="connection-user" href="{{ connection.profile_url }}">
+                                <span class="search-user-avatar">
+                                    {% if connection.display_avatar %}
+                                        <img src="{{ connection.display_avatar }}" alt="">
+                                    {% else %}
+                                        {{ connection.username|first|upper }}
+                                    {% endif %}
+                                </span>
+                                <span class="search-user-copy">
+                                    <strong>@{{ connection.username }}</strong>
+                                    {% if connection.get_full_name %}<span>{{ connection.get_full_name }}</span>{% else %}<span>Profilni ko‘rish</span>{% endif %}
+                                </span>
+                                <span class="connection-arrow" aria-hidden="true">→</span>
+                            </a>
+                        {% empty %}
+                            <p class="connections-empty">Hozircha hech kimni kuzatmayapsiz.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="profile-post-section my-posts-section" aria-labelledby="my-posts-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow accent">{% if is_profile_owner %}Siz ulashgansiz{% else %}Ulashgan postlar{% endif %}</p>
+                        <h2 id="my-posts-title">{% if is_profile_owner %}Postlarim{% else %}{{ profile_user.username }} postlari{% endif %}</h2>
+                    </div>
+                    <span class="section-count">{{ user_posts|length }} TA POST</span>
+                </div>
+                <div class="my-post-list profile-post-grid">
+                    {% for post in user_posts %}
+                        <article class="my-post-card profile-grid-card" id="post-{{ post.pk }}">
+                            <time class="profile-grid-date" datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"d.m.Y · H:i" }}</time>
+                            {% if post.img %}
+                                <img class="my-post-image profile-grid-media" src="{{ post.img.url }}" alt="{{ post.title|default:'Post rasmi' }}">
+                            {% elif post.video %}
+                                <video class="my-post-video profile-grid-media" controls preload="metadata"><source src="{{ post.video.url }}">Brauzeringiz videoni qo‘llab-quvvatlamaydi.</video>
+                            {% else %}
+                                <div class="profile-grid-text">
+                                    {% if post.title %}<h3>{{ post.title }}</h3>{% endif %}
+                                    <p>{{ post.desc }}</p>
+                                </div>
+                            {% endif %}
+                            {% if post.img or post.video %}
+                                <div class="profile-grid-caption">
+                                    {% if post.title %}<h3>{{ post.title }}</h3>{% endif %}
+                                    <p>{{ post.desc }}</p>
+                                </div>
+                            {% endif %}
+                            {% include "partials/post_social.html" with post=post %}
+                        </article>
+                    {% empty %}
+                        <p class="my-post-empty">{% if is_profile_owner %}Hali post ulashmagansiz. Birinchi postingizni yuqoridagi formadan qo‘shing.{% else %}Bu foydalanuvchi hali post ulashmagan.{% endif %}</p>
+                    {% endfor %}
+                </div>
+            </section>
+        </section>
+        {% include "partials/share_post_modal.html" %}
+        <footer class="profile-footer"><span>3157 BLOG</span><span>{{ profile_user.username }}</span></footer>
+    </main>
+    <script src="{% static 'js/menu.js' %}" defer></script>
+    <script src="{% static 'js/social.js' %}" defer></script>
+</body>
+</html>

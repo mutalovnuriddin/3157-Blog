@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f3f1e9">
+    <title>{% if query %}{{ query }} — qidiruv{% else %}Foydalanuvchilarni qidirish{% endif %} | 3157 Blog</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="feed-body">
+    <main class="feed-page search-page">
+        <header class="feed-header">
+            <a class="wordmark" href="{% url 'home' %}">
+                <span class="wordmark-mark">3</span> 3157 Blog
+            </a>
+            <button class="nav-burger" type="button" data-nav-burger aria-label="Menyuni ochish" aria-expanded="false" aria-controls="feedNavSearch" title="Menyu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+            <nav id="feedNavSearch" class="feed-nav" aria-label="Asosiy navigatsiya" data-nav-burger-menu>
+                <a href="{% url 'home' %}">Postlar</a>
+                <a class="feed-nav-active" href="{% url 'search_users' %}">Qidiruv</a>
+                <a href="{% url 'chat_inbox' %}">Xabarlar</a>
+                <a href="{% url 'notifications' %}">Bildirishnomalar{% if unread_notifications_count %}<span class="nav-count">{{ unread_notifications_count }}</span>{% endif %}</a>
+                <a href="{% url 'profile' %}">Mening profilim <span aria-hidden="true">→</span></a>
+            </nav>
+        </header>
+
+        <section class="search-main">
+            <div class="search-intro">
+                <p class="eyebrow accent">Hamjamiyat</p>
+                <h1>O‘z odamingizni<br><span>toping.</span></h1>
+                <p>Foydalanuvchilarni username yoki ism-familiyasi orqali qidiring.</p>
+            </div>
+
+            <form action="{% url 'search_users' %}" method="get" class="search-page-form" role="search">
+                <label class="visually-hidden" for="searchPageInput">Foydalanuvchilarni qidirish</label>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                    <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <input
+                    id="searchPageInput"
+                    type="search"
+                    name="q"
+                    value="{{ query }}"
+                    placeholder="Masalan: ali yoki Ali Valiyev"
+                    autocomplete="off"
+                >
+                <button class="button button-primary" type="submit">Qidirish <span aria-hidden="true">→</span></button>
+            </form>
+
+            <section class="search-results" aria-live="polite" aria-label="Qidiruv natijalari">
+                {% if query %}
+                    <div class="search-results-heading">
+                        <div>
+                            <p class="eyebrow accent">Natijalar</p>
+                            <h2>“{{ query }}” bo‘yicha</h2>
+                        </div>
+                        <span class="search-result-limit">20 TAGACHA</span>
+                    </div>
+                    {% if users %}
+                        <div class="search-user-list">
+                            {% for u in users %}
+                                <article class="search-user-card">
+                                    <a class="search-user-link" href="{% url 'public_profile' u.pk %}">
+                                        <span class="search-user-avatar">
+                                            {% if u.display_avatar %}
+                                                <img src="{{ u.display_avatar }}" alt="">
+                                            {% else %}
+                                                {{ u.username|first|upper }}
+                                            {% endif %}
+                                        </span>
+                                        <span class="search-user-copy">
+                                            <strong>@{{ u.username }}</strong>
+                                            {% if u.get_full_name %}
+                                                <span>{{ u.get_full_name }}</span>
+                                            {% else %}
+                                                <span>Profilni ko‘rish</span>
+                                            {% endif %}
+                                        </span>
+                                    </a>
+                                    <form action="{% url 'follow_toggle' u.pk %}" method="post" data-ajax-action="follow">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button class="button search-follow-button{% if u.is_following %} button-following{% else %} button-primary{% endif %}" type="submit" data-follow-button>
+                                            {% if u.is_following %}Kuzatilyapti{% else %}Kuzatish{% endif %}
+                                        </button>
+                                        <span class="ajax-error" data-ajax-error role="alert" hidden></span>
+                                    </form>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="search-empty">
+                            <span class="search-empty-icon" aria-hidden="true">⌕</span>
+                            <h2>Foydalanuvchi topilmadi</h2>
+                            <p>So‘zni boshqacha yozib ko‘ring yoki username orqali qidiring.</p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="search-empty search-prompt">
+                        <span class="search-empty-icon" aria-hidden="true">⌕</span>
+                        <h2>Kimni izlayapsiz?</h2>
+                        <p>Qidiruv maydoniga kamida bitta ism yoki username yozing.</p>
+                    </div>
+                {% endif %}
+            </section>
+        </section>
+
+        <footer class="feed-bottom">
+            <span>3157 BLOG</span>
+            <span>Yaxshi narsalarni birga ulashing.</span>
+        </footer>
+    </main>
+    <script src="{% static 'js/menu.js' %}" defer></script>
+    <script src="{% static 'js/social.js' %}" defer></script>
+</body>
+</html>

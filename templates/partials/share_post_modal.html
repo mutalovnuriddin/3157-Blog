@@ -1,0 +1,45 @@
+<div class="share-post-modal" data-share-modal
+    data-share-endpoint="{% url 'share_post' %}"
+    data-user-search-endpoint="{% url 'share_user_search' %}"
+    hidden>
+    <button class="share-post-backdrop" type="button" data-share-close aria-label="Oynani yopish"></button>
+    <section class="share-post-sheet" role="dialog" aria-modal="true" aria-labelledby="sharePostTitle">
+        <form hidden data-share-csrf>{% csrf_token %}</form>
+        <div class="share-post-handle" aria-hidden="true"></div>
+        <header class="share-post-header">
+            <div>
+                <p class="eyebrow accent">Post ulashish</p>
+                <h2 id="sharePostTitle">Kimga yuboramiz?</h2>
+            </div>
+            <button class="share-post-close" type="button" data-share-close aria-label="Yopish">×</button>
+        </header>
+        <label class="share-post-search">
+            <span class="visually-hidden">Username orqali qidirish</span>
+            <input type="search" placeholder="Username orqali qidirish" autocomplete="off" data-share-search>
+        </label>
+        <p class="share-post-section-title">Kuzatayotganlaringiz</p>
+        <div class="share-post-users" data-share-users>
+            {% for recipient in share_recipients %}
+                <label class="share-post-user" data-share-user data-user-id="{{ recipient.pk }}" data-username="{{ recipient.username|lower }}">
+                    <input type="checkbox" value="{{ recipient.pk }}" data-share-recipient>
+                    <span class="share-post-avatar">
+                        {% if recipient.share_avatar_url %}
+                            <img src="{{ recipient.share_avatar_url }}" alt="">
+                        {% else %}
+                            {{ recipient.username|first|upper }}
+                        {% endif %}
+                    </span>
+                    <span class="share-post-user-name">@{{ recipient.username }}</span>
+                </label>
+            {% empty %}
+                <p class="share-post-empty" data-share-following-empty>Hozircha kuzatayotgan foydalanuvchilaringiz yo‘q.</p>
+            {% endfor %}
+        </div>
+        <div class="share-post-search-results" data-share-search-results hidden></div>
+        <p class="share-post-error" data-share-error role="alert" hidden></p>
+        <footer class="share-post-footer">
+            <span data-share-selection-count>Foydalanuvchi tanlanmadi</span>
+            <button class="button button-primary" type="button" data-share-send disabled>Yuborish</button>
+        </footer>
+    </section>
+</div>
